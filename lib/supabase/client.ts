@@ -1,8 +1,14 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+let browserClient: SupabaseClient | null = null;
 
-export const supabaseBrowser = createClient(supabaseUrl, supabaseAnon, {
-  auth: { persistSession: true, autoRefreshToken: true }
-});
+export function getSupabaseBrowser() {
+  if (browserClient) return browserClient;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnon) return null;
+  browserClient = createClient(supabaseUrl, supabaseAnon, {
+    auth: { persistSession: true, autoRefreshToken: true }
+  });
+  return browserClient;
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { supabaseBrowser } from '@/lib/supabase/client';
+import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { SAFE_TEMPLATES } from '@/lib/data/templates';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,7 +14,9 @@ export function AdminRoom({ roomId }: { roomId: string }) {
 
   React.useEffect(() => {
     const load = async () => {
-      const { data } = await supabaseBrowser
+      const supabase = getSupabaseBrowser();
+      if (!supabase) return;
+      const { data } = await supabase
         .from('messages')
         .select('*')
         .eq('room_id', roomId)

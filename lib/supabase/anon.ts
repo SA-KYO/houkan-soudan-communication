@@ -1,11 +1,13 @@
-import { supabaseBrowser } from '@/lib/supabase/client';
+import { getSupabaseBrowser } from '@/lib/supabase/client';
 import type { Session } from '@supabase/supabase-js';
 
 export async function ensureAnonSession() {
-  const { data } = await supabaseBrowser.auth.getSession();
+  const supabase = getSupabaseBrowser();
+  if (!supabase) return;
+  const { data } = await supabase.auth.getSession();
   let session: Session | null = data.session;
   if (!session) {
-    const response = await supabaseBrowser.auth.signInAnonymously();
+    const response = await supabase.auth.signInAnonymously();
     session = response.data.session ?? null;
   }
   if (typeof window !== 'undefined' && session?.user?.id) {

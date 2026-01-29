@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { supabaseBrowser } from '@/lib/supabase/client';
+import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { ensureAnonSession } from '@/lib/supabase/anon';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,19 +20,25 @@ export function Chat({ roomId }: { roomId: string }) {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [value, setValue] = React.useState('');
   const [sending, setSending] = React.useState(false);
+  const [ready, setReady] = React.useState(true);
 
   React.useEffect(() => {
     let ignore = false;
-    let channel = supabaseBrowser.channel(`room:${roomId}`);
+    const supabase = getSupabaseBrowser();
+    if (!supabase) {
+      setReady(false);
+      return;
+    }
+    let channel = supabase.channel(`room:${roomId}`);
     const load = async () => {
       await ensureAnonSession();
-      const { data } = await supabaseBrowser
+      const { data } = await supabase
         .from('messages')
         .select('*')
         .eq('room_id', roomId)
         .order('created_at', { ascending: true });
       if (!ignore && data) setMessages(data as Message[]);
-      channel = supabaseBrowser
+      channel = supabase
         .channel(`room:${roomId}`)
         .on(
           'postgres_changes',
@@ -47,7 +53,7 @@ export function Chat({ roomId }: { roomId: string }) {
 
     return () => {
       ignore = true;
-      supabaseBrowser.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
   }, [roomId]);
 
@@ -68,6 +74,11 @@ export function Chat({ roomId }: { roomId: string }) {
 
   return (
     <div className="grid gap-6">
+      {!ready && (
+        <Card className="border-blush-200 bg-blush-50 p-4 text-sm text-blush-700">
+          Supabaseの環境変数が未設定です。.env.local / Netlifyの環境変数を確認してください。
+        </Card>
+      )}
       <Card className="border-blush-100 bg-white/90 p-4">
         <div className="flex items-center justify-between">
           <div>

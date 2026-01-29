@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { supabaseBrowser } from '@/lib/supabase/client';
+import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { Badge } from '@/components/ui/badge';
 
 export type Room = {
@@ -18,7 +18,9 @@ export function AdminRoomsClient() {
 
   React.useEffect(() => {
     const load = async () => {
-      const { data } = await supabaseBrowser
+      const supabase = getSupabaseBrowser();
+      if (!supabase) return;
+      const { data } = await supabase
         .from('rooms')
         .select('*')
         .order('created_at', { ascending: false });

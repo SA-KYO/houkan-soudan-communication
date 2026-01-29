@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { supabaseBrowser } from '@/lib/supabase/client';
+import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +13,9 @@ export function AdminResourcesClient() {
   const [tags, setTags] = React.useState('');
 
   const load = async () => {
-    const { data } = await supabaseBrowser.from('resources').select('*').order('created_at', { ascending: false });
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
+    const { data } = await supabase.from('resources').select('*').order('created_at', { ascending: false });
     setItems(data ?? []);
   };
 

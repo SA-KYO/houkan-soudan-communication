@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, AlertTriangle, ClipboardHeart, Sparkles } from 'lucide-react';
+import { ArrowRight, AlertTriangle, Clipboard, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -180,7 +180,7 @@ export function ConsultFlow() {
           <CardContent className="grid gap-3">
             {(matched.length ? matched : recommendations.slice(0, 2)).map((rec) => (
               <div key={rec.id} className="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50 px-4 py-3 text-sm">
-                <ClipboardHeart className="h-4 w-4 text-blush-500" />
+                <Clipboard className="h-4 w-4 text-blush-500" />
                 {rec.label}
               </div>
             ))}

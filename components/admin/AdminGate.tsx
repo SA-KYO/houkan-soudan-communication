@@ -11,6 +11,23 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const fetchRole = React.useCallback(async (session: any) => {
+    const supabase = getSupabaseBrowser();
+    if (!supabase || !session?.user?.id) return;
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+    if (error) {
+      setError('管理者権限の確認に失敗しました。');
+      setRole(null);
+      return;
+    }
+    setRole(profile?.role ?? null);
+  }, []);
 
   React.useEffect(() => {
     const init = async () => {
@@ -19,20 +36,19 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
       if (data.session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.session.user.id)
-          .single();
-        setRole(profile?.role ?? null);
+        await fetchRole(data.session);
       }
     };
     init();
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setRole(null);
+      setError(null);
+      if (session) {
+        await fetchRole(session);
+      }
     });
     return () => {
       listener.subscription.unsubscribe();
@@ -41,13 +57,16 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
 
   const signIn = async () => {
     setError(null);
+    setLoading(true);
     const supabase = getSupabaseBrowser();
     if (!supabase) {
       setError('Supabaseの環境変数が未設定です。');
+      setLoading(false);
       return;
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setError(error.message);
+    setLoading(false);
   };
 
   if (!session || role !== 'admin') {
@@ -67,7 +86,9 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
             placeholder="password"
           />
           {error && <p className="text-xs text-blush-600">{error}</p>}
-          <Button onClick={signIn}>ログイン</Button>
+          <Button onClick={signIn} disabled={loading}>
+            {loading ? 'ログイン中...' : 'ログイン'}
+          </Button>
           <p className="text-xs text-ink/50">
             初回はSupabaseのAuthで管理者ユーザーを作成し、profiles.roleをadminに設定してください。
           </p>
